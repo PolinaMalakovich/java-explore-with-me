@@ -34,10 +34,10 @@ public class Event {
     @Column
     @Size(min = 20, max = 7000, message = "Description should be shorter than 7000 and longer than 20 characters.")
     private String description;
-    @Column(nullable = false)
-    private LocalDateTime created = LocalDateTime.now();
-    @Column
-    private LocalDateTime published;
+    @Column(nullable = false, name = "created")
+    private LocalDateTime createdOn = LocalDateTime.now();
+    @Column(name = "published")
+    private LocalDateTime publishedOn;
     @Column(nullable = false)
     private LocalDateTime eventDate;
     @Embedded
@@ -45,7 +45,7 @@ public class Event {
     @Column
     private boolean paid;
     @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "initiator_id", nullable = false)
     private User initiator;
     @Column
     private int participantLimit;
@@ -65,8 +65,8 @@ public class Event {
             && Objects.equals(annotation, event.annotation)
             && Objects.equals(category, event.category)
             && Objects.equals(description, event.description)
-            && Objects.equals(created, event.created)
-            && Objects.equals(published, event.published)
+            && Objects.equals(createdOn, event.createdOn)
+            && Objects.equals(publishedOn, event.publishedOn)
             && Objects.equals(eventDate, event.eventDate)
             && Objects.equals(location, event.location)
             && Objects.equals(paid, event.paid)
@@ -78,7 +78,8 @@ public class Event {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, annotation, category, description, created, published, eventDate, location, paid,
+        return Objects.hash(id, title, annotation, category, description, createdOn, publishedOn, eventDate, location,
+            paid,
             initiator, participantLimit, requestModeration, state);
     }
 }

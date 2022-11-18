@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
+import java.util.List;
 import java.util.Objects;
 
 @Getter
@@ -25,6 +26,13 @@ public class Compilation {
     private String title;
     @Column
     private boolean pinned;
+    @ManyToMany
+    @JoinTable(
+        name = "event_compilations",
+        joinColumns = {@JoinColumn(name = "compilation_id")},
+        inverseJoinColumns = {@JoinColumn(name = "event_id")}
+    )
+    private List<Event> events;
 
     @Override
     public boolean equals(Object o) {

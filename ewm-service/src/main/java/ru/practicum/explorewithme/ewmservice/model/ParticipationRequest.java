@@ -24,7 +24,7 @@ public class ParticipationRequest {
     @Column(nullable = false)
     private LocalDateTime created = LocalDateTime.now();
     @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "requester_id", nullable = false)
     private User requester;
     @ManyToOne(optional = false)
     @JoinColumn(name = "event_id", nullable = false)

@@ -48,21 +48,21 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         final Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new EntityNotFoundException("Event", eventId));
         if (participationRequestRepository.findByEventIdAndRequesterId(event.getId(), user.getId()).isPresent()) {
-            throw new UnsupportedOperationException(); // TODO: 12.11.2022 add a different exception
+            throw new UnsupportedOperationException();
         }
         if (Objects.equals(user.getId(), event.getInitiator().getId())) {
-            throw new UnsupportedOperationException(); // TODO: 12.11.2022 add a different exception
+            throw new UnsupportedOperationException();
         }
         if (!Objects.equals(event.getState(), EventState.PUBLISHED)) {
-            throw new UnsupportedOperationException(); // TODO: 12.11.2022 add a different exception
+            throw new UnsupportedOperationException();
         }
-        if (participationRequestRepository.findByEventIdAndStatus(event.getId(), APPROVED).count()
+        if (participationRequestRepository.findByEventIdAndStatus(event.getId(), CONFIRMED).count()
             == event.getParticipantLimit()) {
-            throw new UnsupportedOperationException(); // TODO: 12.11.2022 add a different exception
+            throw new UnsupportedOperationException();
         }
         ParticipationRequestStatus status = PENDING;
         if (event.getParticipantLimit() == 0 || !event.isRequestModeration()) {
-            status = APPROVED;
+            status = CONFIRMED;
         }
         final ParticipationRequest participationRequest = new ParticipationRequest(
             null,
@@ -85,7 +85,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         final ParticipationRequest participationRequest = participationRequestRepository.findById(requestId)
             .orElseThrow(() -> new EntityNotFoundException("Participation request", requestId));
         if (!Objects.equals(user.getId(), participationRequest.getRequester().getId())) {
-            throw new UnsupportedOperationException(); // TODO: 12.11.2022 add a different exception
+            throw new UnsupportedOperationException();
         }
         participationRequest.setStatus(CANCELED);
         log.info("Participation request " + participationRequest.getId() + " canceled successfully.");
@@ -112,15 +112,15 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             .orElseThrow(() -> new EntityNotFoundException("Event", eventId));
         final ParticipationRequest participationRequest = participationRequestRepository.findById(requestId)
             .orElseThrow(() -> new EntityNotFoundException("Participation request", requestId));
-        if (participationRequestRepository.findByEventIdAndStatus(event.getId(), APPROVED).count()
+        if (participationRequestRepository.findByEventIdAndStatus(event.getId(), CONFIRMED).count()
             < event.getParticipantLimit()) {
-            participationRequest.setStatus(APPROVED);
+            participationRequest.setStatus(CONFIRMED);
         }
-        if (participationRequestRepository.findByEventIdAndStatus(event.getId(), APPROVED).count()
+        if (participationRequestRepository.findByEventIdAndStatus(event.getId(), CONFIRMED).count()
             == event.getParticipantLimit()) {
             participationRequestRepository
                 .findByEventIdAndStatus(event.getId(), PENDING)
-                .forEach(pr -> pr.setStatus(DECLINED));
+                .forEach(pr -> pr.setStatus(REJECTED));
         }
         log.info("Participation request " + participationRequest.getId() + " approved successfully.");
 
@@ -135,8 +135,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         checkInitiator(userId, eventId);
         final ParticipationRequest participationRequest = participationRequestRepository.findById(requestId)
             .orElseThrow(() -> new EntityNotFoundException("Participation request", requestId));
-        participationRequest.setStatus(DECLINED);
-        log.info("Participation request " + participationRequest.getId() + " declined successfully.");
+        participationRequest.setStatus(REJECTED);
+        log.info("Participation request " + participationRequest.getId() + " rejected successfully.");
 
         return toParticipationRequestDto(participationRequest);
     }
@@ -147,7 +147,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         final Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new EntityNotFoundException("Event", eventId));
         if (!Objects.equals(user.getId(), event.getInitiator().getId())) {
-            throw new UnsupportedOperationException(); // TODO: 12.11.2022 add a different exception
+            throw new UnsupportedOperationException();
         }
     }
 }

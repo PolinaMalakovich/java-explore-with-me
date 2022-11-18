@@ -20,9 +20,9 @@ public interface EventService {
 
     List<EventShortDto> getEventsByUser(long userId, int from, int size);
 
-    EventFullDto updateEvent(long userId, UpdateEventRequest event);
+    EventFullDto updateEvent(long userId, UpdateEventRequest updateEventRequest);
 
-    EventFullDto addEvent(long userId, NewEventDto event);
+    EventFullDto addEvent(long userId, NewEventDto newEventDto);
 
     EventFullDto getEvent(long userId, long eventId);
 
@@ -36,7 +36,7 @@ public interface EventService {
                                  int from,
                                  int size);
 
-    EventFullDto updateEventForAdmin(long eventId, AdminUpdateEventRequest event);
+    EventFullDto updateEventForAdmin(long eventId, AdminUpdateEventRequest adminUpdate);
 
     EventFullDto publishEvent(long eventId);
 

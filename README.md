@@ -1,3 +1,5 @@
 # java-explore-with-me
 
-Template repository for ExploreWithMe project.
+ExploreWithMe helps you find events to go to and people to go with.
+
+PR: https://github.com/PolinaMalakovich/java-explore-with-me/pull/1

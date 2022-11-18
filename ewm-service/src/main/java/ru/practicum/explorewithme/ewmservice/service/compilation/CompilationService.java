@@ -6,7 +6,7 @@ import ru.practicum.explorewithme.dto.compilation.NewCompilationDto;
 import java.util.List;
 
 public interface CompilationService {
-    List<CompilationDto> getCompilations(boolean pinned, int from, int size);
+    List<CompilationDto> getCompilations(Boolean pinned, int from, int size);
 
     CompilationDto getCompilation(long compilationId);
 

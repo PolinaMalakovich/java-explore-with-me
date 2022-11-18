@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.dto.user.NewUserRequest;
 import ru.practicum.explorewithme.dto.user.UserDto;
+import ru.practicum.explorewithme.ewmservice.exception.ConflictException;
 import ru.practicum.explorewithme.ewmservice.model.User;
 import ru.practicum.explorewithme.ewmservice.repository.UserRepository;
 
@@ -34,6 +35,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto addUser(final NewUserRequest newUserRequest) {
+        final String name = newUserRequest.getName();
+        User nameLike = userRepository.findByNameLike(name);
+        if (nameLike != null) {
+            throw new ConflictException("User", name);
+        }
         final User user = toUser(newUserRequest);
         final User newUser = userRepository.save(user);
         log.info("New user created successfully.");

@@ -14,5 +14,4 @@ public class UpdateEventRequest {
     LocalDateTime eventDate;
     Boolean paid;
     Integer participantLimit;
-
 }

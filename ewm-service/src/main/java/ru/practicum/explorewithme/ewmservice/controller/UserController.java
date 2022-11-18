@@ -15,10 +15,10 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public List<UserDto> getUsers(@RequestParam final List<Long> userIds,
+    public List<UserDto> getUsers(@RequestParam final List<Long> ids,
                                   @RequestParam(defaultValue = "0") final int from,
                                   @RequestParam(defaultValue = "10") final int size) {
-        return userService.getUsers(userIds, from, size);
+        return userService.getUsers(ids, from, size);
     }
 
     @PostMapping

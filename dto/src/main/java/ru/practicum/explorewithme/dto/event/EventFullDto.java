@@ -18,8 +18,8 @@ public class EventFullDto {
     @NotNull
     CategoryDto category;
     String description;
-    LocalDateTime created;
-    LocalDateTime published;
+    LocalDateTime createdOn;
+    LocalDateTime publishedOn;
     @NotNull
     LocalDateTime eventDate;
     @NotNull
@@ -30,5 +30,6 @@ public class EventFullDto {
     Integer participantLimit;
     Boolean requestModeration;
     EventState state;
+    Long confirmedRequests;
     Long views;
 }

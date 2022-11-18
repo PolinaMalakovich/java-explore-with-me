@@ -6,4 +6,5 @@ import ru.practicum.explorewithme.ewmservice.model.Category;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
+    Category findByNameLike(String name);
 }

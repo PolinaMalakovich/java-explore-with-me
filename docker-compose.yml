@@ -34,6 +34,9 @@ services:
       - EWM_DB_PASSWORD=explorewithme
       - EWM_DB_HOST=ewm-db
       - EWM_DB_PORT=5432
+      - STATS_SCHEMA=http
+      - STATS_HOST=stats-server
+      - STATS_PORT=9090
 
   ewm-db:
     image: postgres:14-alpine
