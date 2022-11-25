@@ -21,14 +21,17 @@ import static ru.practicum.explorewithme.ewmservice.EwmConfiguration.DATE_TIME_F
 public class EwmClient {
     private final RestTemplate rest;
     private final String apiBase;
+    private final String appName;
 
     @Autowired
     public EwmClient(@Value("${ewm.stats.server.schema}") String schema,
                      @Value("${ewm.stats.server.host}") String host,
                      @Value("${ewm.stats.server.port}") int port,
+                     @Value("${ewm.app-name}") String appName,
                      RestTemplateBuilder builder) {
         this.rest = builder.build();
         this.apiBase = schema + "://" + host + ":" + port;
+        this.appName = appName;
     }
 
     private static <T> ResponseEntity<T> prepareResponse(final ResponseEntity<T> response) {
@@ -45,8 +48,8 @@ public class EwmClient {
         return responseBuilder.build();
     }
 
-    public void hit(HitDto hitDto) {
-        post("/hit", hitDto);
+    public void hit(String uri, String ip) {
+        post("/hit", new HitDto(null, appName, uri, ip, LocalDateTime.now()));
     }
 
     public List<Stats> stats(final LocalDateTime start,

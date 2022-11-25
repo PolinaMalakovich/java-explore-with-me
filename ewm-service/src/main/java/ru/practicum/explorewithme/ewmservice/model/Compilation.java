@@ -22,9 +22,8 @@ public class Compilation {
     @Column(name = "compilation_id")
     private Long id;
     @Column(nullable = false)
-    @Size(max = 64, message = "Title cannot be longer than 64 characters.")
+    @Size(max = 120, message = "Title cannot be longer than 120 characters.")
     private String title;
-    @Column
     private boolean pinned;
     @ManyToMany
     @JoinTable(

@@ -20,6 +20,6 @@ public class CompilationMapper {
     }
 
     public static Compilation toCompilation(final NewCompilationDto newCompilationDto, final List<Event> events) {
-        return new Compilation(null, newCompilationDto.getTitle(), newCompilationDto.getPinned(), events);
+        return new Compilation(null, newCompilationDto.getTitle(), newCompilationDto.isPinned(), events);
     }
 }

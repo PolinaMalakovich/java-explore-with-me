@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.dto.hit.HitDto;
 import ru.practicum.explorewithme.dto.hit.Stats;
+import ru.practicum.explorewithme.statsserver.model.App;
 import ru.practicum.explorewithme.statsserver.model.Hit;
+import ru.practicum.explorewithme.statsserver.repository.AppRepository;
 import ru.practicum.explorewithme.statsserver.repository.HitRepository;
 
 import java.time.LocalDateTime;
@@ -21,11 +23,14 @@ import static ru.practicum.explorewithme.statsserver.service.HitMapper.toHitDto;
 @Transactional(readOnly = true)
 public class HitServiceImpl implements HitService {
     private final HitRepository hitRepository;
+    private final AppRepository appRepository;
 
     @Override
     @Transactional
     public HitDto saveHit(final HitDto hitDto) {
-        final Hit hit = toHit(hitDto);
+        final App app = appRepository.findByName(hitDto.getApp())
+            .orElseGet(() -> appRepository.save(new App(null, hitDto.getApp())));
+        final Hit hit = toHit(hitDto, app);
         final Hit newHit = hitRepository.save(hit);
         log.info("New hit saved successfully.");
 
@@ -37,6 +42,9 @@ public class HitServiceImpl implements HitService {
                                 final LocalDateTime end,
                                 final List<String> uris,
                                 final boolean unique) {
+        if (end.isBefore(start)) {
+            throw new IllegalArgumentException();
+        }
         List<Stats> statsList;
         if (unique) {
             statsList = hitRepository.getAllUnique(start, end, uris);

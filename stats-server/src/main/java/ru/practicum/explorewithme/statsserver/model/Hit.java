@@ -18,20 +18,22 @@ import java.time.LocalDateTime;
 @NamedNativeQueries({
     @NamedNativeQuery(
         name = "Hit.getAllUnique",
-        query = "SELECT app, uri, count (DISTINCT ip) as hits " +
+        query = "SELECT apps.name AS app, uri, count (DISTINCT ip) AS hits " +
             "FROM hits " +
+            "LEFT JOIN apps ON apps.app_id = hits.app_id " +
             "WHERE timestamp BETWEEN ?1 AND ?2 " +
-            "AND uri in ?3 " +
-            "GROUP BY app, uri ",
+            "AND uri IN ?3 " +
+            "GROUP BY apps.name, uri ",
         resultSetMapping = "Mapping.Stats"
     ),
     @NamedNativeQuery(
         name = "Hit.getAll",
-        query = "SELECT app, uri, count (ip) as hits " +
+        query = "SELECT apps.name AS app, uri, count (ip) AS hits " +
             "FROM hits " +
+            "LEFT JOIN apps ON apps.app_id = hits.app_id " +
             "WHERE timestamp BETWEEN ?1 AND ?2 " +
-            "AND uri in ?3 " +
-            "GROUP BY app, uri ",
+            "AND uri IN ?3 " +
+            "GROUP BY apps.name, uri ",
         resultSetMapping = "Mapping.Stats"
     )
 })
@@ -50,12 +52,10 @@ public class Hit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "hit_id")
     private Long id;
-    @Column
-    private String app;
-    @Column
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "app_id", nullable = false)
+    private App app;
     private String uri;
-    @Column
     private String ip;
-    @Column
     private LocalDateTime timestamp;
 }

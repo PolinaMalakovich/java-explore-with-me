@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import ru.practicum.explorewithme.ewmservice.model.Event;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Repository
@@ -33,4 +34,6 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
     Stream<Event> findEventsByCompilationIdOrderById(long compilationId);
 
     Stream<Event> findEventsByInitiatorIdOrderById(long user, Pageable pageable);
+
+    Optional<Event> findByIdAndInitiatorId(long eventId, long initiatorId);
 }

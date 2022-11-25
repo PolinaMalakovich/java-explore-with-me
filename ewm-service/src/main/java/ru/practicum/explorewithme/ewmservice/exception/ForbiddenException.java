@@ -11,14 +11,6 @@ public class ForbiddenException extends RuntimeException {
     String entity;
     String action;
 
-    public ForbiddenException(final long userId, final long entityId, final String entity, String action) {
-        super("User " + userId + " cannot " + action + " " + entity + " " + entityId + ".");
-        this.userId = userId;
-        this.entityId = entityId;
-        this.entity = entity;
-        this.action = action;
-    }
-
     public ForbiddenException(final long userId,
                               final long entityId,
                               final String entity,

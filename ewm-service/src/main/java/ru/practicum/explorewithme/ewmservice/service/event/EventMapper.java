@@ -115,7 +115,7 @@ public class EventMapper {
             null,
             newEventDto.getEventDate(),
             toLocation(newEventDto.getLocation()),
-            newEventDto.getPaid(),
+            newEventDto.isPaid(),
             user,
             newEventDto.getParticipantLimit(),
             newEventDto.getRequestModeration(),

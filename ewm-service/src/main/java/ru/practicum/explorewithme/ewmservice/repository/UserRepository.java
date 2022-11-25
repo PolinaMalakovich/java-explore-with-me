@@ -6,5 +6,4 @@ import ru.practicum.explorewithme.ewmservice.model.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    User findByNameLike(String name);
 }

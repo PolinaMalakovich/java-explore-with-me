@@ -22,16 +22,13 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "event_id")
     private Long id;
-    @Column
     @Size(min = 3, max = 120, message = "Title should be shorter than 120 and longer than 3 characters.")
     private String title;
-    @Column
     @Size(min = 20, max = 2000, message = "Annotation should be shorter than 2000 and longer than 20 characters.")
     private String annotation;
     @ManyToOne(optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
-    @Column
     @Size(min = 20, max = 7000, message = "Description should be shorter than 7000 and longer than 20 characters.")
     private String description;
     @Column(nullable = false, name = "created")
@@ -42,14 +39,11 @@ public class Event {
     private LocalDateTime eventDate;
     @Embedded
     private Location location;
-    @Column
     private boolean paid;
     @ManyToOne(optional = false)
     @JoinColumn(name = "initiator_id", nullable = false)
     private User initiator;
-    @Column
     private int participantLimit;
-    @Column
     private boolean requestModeration;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

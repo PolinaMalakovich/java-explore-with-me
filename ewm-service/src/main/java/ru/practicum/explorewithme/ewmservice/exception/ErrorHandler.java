@@ -2,6 +2,7 @@ package ru.practicum.explorewithme.ewmservice.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -49,7 +50,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(BAD_REQUEST)
+    @ResponseStatus(CONFLICT)
     public ApiError handleConstraintViolationException(final ConstraintViolationException e) {
         log.error(e.getMessage());
         final List<String> errors = e.getConstraintViolations()
@@ -57,7 +58,7 @@ public class ErrorHandler {
             .map(violation -> suffix(violation.getPropertyPath().toString(), '.'))
             .collect(toList());
 
-        return new ApiError(errors, e.getMessage(), "Constraint violation.", BAD_REQUEST, LocalDateTime.now());
+        return new ApiError(errors, e.getMessage(), "Constraint violation.", CONFLICT, LocalDateTime.now());
     }
 
     @ExceptionHandler
@@ -75,7 +76,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(BAD_REQUEST)
+    @ResponseStatus(CONFLICT)
     public ApiError handleDataIntegrityViolationException(final DataIntegrityViolationException e) {
         log.error(e.getMessage());
 
@@ -83,7 +84,7 @@ public class ErrorHandler {
             List.of("DataIntegrityViolationException"),
             e.getMessage(),
             "Incorrect request.",
-            BAD_REQUEST,
+            CONFLICT,
             LocalDateTime.now()
         );
     }
@@ -95,6 +96,20 @@ public class ErrorHandler {
 
         return new ApiError(
             List.of("MissingServletRequestParameterException"),
+            e.getMessage(),
+            "Incorrect request.",
+            BAD_REQUEST,
+            LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(BAD_REQUEST)
+    public ApiError handleInvalidDataAccessApiUsageException(final InvalidDataAccessApiUsageException e) {
+        log.error(e.getMessage());
+
+        return new ApiError(
+            List.of("InvalidDataAccessApiUsageException"),
             e.getMessage(),
             "Incorrect request.",
             BAD_REQUEST,
@@ -159,12 +174,26 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(BAD_REQUEST)
+    @ResponseStatus(FORBIDDEN)
     public ApiError handleForbiddenException(final ForbiddenException e) {
         log.error(e.getMessage());
 
         return new ApiError(
             List.of("ForbiddenException"),
+            e.getMessage(),
+            "Incorrect request.",
+            FORBIDDEN,
+            LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(BAD_REQUEST)
+    public ApiError handlePermissionDeniedException(final PermissionDeniedException e) {
+        log.error(e.getMessage());
+
+        return new ApiError(
+            List.of("PermissionDeniedException"),
             e.getMessage(),
             "Incorrect request.",
             BAD_REQUEST,

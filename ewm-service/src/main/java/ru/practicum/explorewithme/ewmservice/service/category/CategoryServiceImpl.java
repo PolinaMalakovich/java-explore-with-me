@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.dto.category.CategoryDto;
 import ru.practicum.explorewithme.dto.category.NewCategoryDto;
-import ru.practicum.explorewithme.ewmservice.exception.ConflictException;
 import ru.practicum.explorewithme.ewmservice.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.ewmservice.model.Category;
 import ru.practicum.explorewithme.ewmservice.repository.CategoryRepository;
@@ -41,11 +40,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryDto updateCategory(final CategoryDto categoryDto) {
-        final String name = categoryDto.getName();
-        final Category nameLike = categoryRepository.findByNameLike(name);
-        if (nameLike != null) {
-            throw new ConflictException("Category", name);
-        }
         final Category category = categoryRepository.findById(categoryDto.getId())
             .orElseThrow(IllegalArgumentException::new);
         if (categoryDto.getName() != null) {
@@ -59,11 +53,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryDto addCategory(final NewCategoryDto newCategoryDto) {
-        final String name = newCategoryDto.getName();
-        final Category nameLike = categoryRepository.findByNameLike(name);
-        if (nameLike != null) {
-            throw new ConflictException("Category", name);
-        }
         final Category category = toCategory(newCategoryDto);
         final Category newCategory = categoryRepository.save(category);
         log.info("New category created successfully.");

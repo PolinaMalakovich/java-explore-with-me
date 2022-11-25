@@ -2,9 +2,7 @@ package ru.practicum.explorewithme.dto.event;
 
 import lombok.Value;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.time.LocalDateTime;
 
 @Value
@@ -20,10 +18,12 @@ public class NewEventDto {
     @Size(min = 20, max = 7000, message = "Description should be shorter than 7000 and longer than 20 characters.")
     String description;
     @NotNull
+    @Future
     LocalDateTime eventDate;
     @NotNull
     LocationDto location;
-    Boolean paid;
-    Integer participantLimit;
+    boolean paid;
+    @PositiveOrZero
+    int participantLimit;
     Boolean requestModeration;
 }

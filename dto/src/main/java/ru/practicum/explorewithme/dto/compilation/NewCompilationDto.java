@@ -9,6 +9,6 @@ import java.util.Set;
 public class NewCompilationDto {
     @NotBlank
     String title;
-    Boolean pinned;
+    boolean pinned;
     Set<Long> events;
 }

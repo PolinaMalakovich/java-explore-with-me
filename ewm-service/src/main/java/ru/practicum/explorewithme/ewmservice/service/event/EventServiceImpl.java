@@ -7,12 +7,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.dto.event.*;
-import ru.practicum.explorewithme.dto.hit.Stats;
 import ru.practicum.explorewithme.ewmservice.EwmClient;
 import ru.practicum.explorewithme.ewmservice.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.ewmservice.exception.EventDateException;
 import ru.practicum.explorewithme.ewmservice.exception.EventStateException;
-import ru.practicum.explorewithme.ewmservice.exception.ForbiddenException;
+import ru.practicum.explorewithme.ewmservice.exception.PermissionDeniedException;
 import ru.practicum.explorewithme.ewmservice.model.Category;
 import ru.practicum.explorewithme.ewmservice.model.Event;
 import ru.practicum.explorewithme.ewmservice.model.User;
@@ -23,13 +22,12 @@ import ru.practicum.explorewithme.ewmservice.repository.UserRepository;
 import ru.practicum.explorewithme.ewmservice.spesification.EventSpecifications;
 import ru.practicum.explorewithme.util.TreeFunction;
 
+import javax.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 import static ru.practicum.explorewithme.dto.event.EventState.*;
 import static ru.practicum.explorewithme.dto.participationrequest.ParticipationRequestStatus.CONFIRMED;
 import static ru.practicum.explorewithme.ewmservice.service.event.EventMapper.*;
@@ -47,6 +45,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final EwmClient ewmClient;
+    private final EntityManager entityManager;
 
     @Override
     public List<EventShortDto> getEvents(final String text,
@@ -99,19 +98,17 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository
             .findEventsByInitiatorIdOrderById(userId, PageRequest.of(from / size, size))
             .collect(toList());
-        if (events.isEmpty()) return new ArrayList<>();
-        final Map<Event, String> eventUris = events.stream().collect(toMap(identity(), e -> "/events/" + e.getId()));
-        final Map<String, Long> uriStats = ewmClient
-            .stats(events.get(0).getCreatedOn(), LocalDateTime.now(), eventUris.values(), false)
-            .stream()
-            .collect(toMap(Stats::getUri, Stats::getHits));
+        if (events.isEmpty()) return Collections.emptyList();
+        final Map<Event, String> eventUris = getEventUris(events);
+        final Map<String, Long> uriStats = getUriStats(ewmClient, events, eventUris.values());
+        final Map<Long, Long> confirmedRequests = getConfirmedRequests(events, entityManager);
 
         return events
             .stream()
             .map(e ->
                 toEventShortDto(
                     e,
-                    requestRepository.findByEventIdAndStatus(e.getId(), CONFIRMED).count(),
+                    confirmedRequests.getOrDefault(e.getId(), 0L),
                     uriStats.getOrDefault(eventUris.get(e), 0L)
                 )
             )
@@ -121,14 +118,8 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto updateEvent(final long userId, final UpdateEventRequest updateEventRequest) {
-        final User user = userRepository.findById(userId)
-            .orElseThrow(() -> new EntityNotFoundException("User", userId));
-        final Event event = eventRepository
-            .findById(updateEventRequest.getEventId())
+        final Event event = eventRepository.findByIdAndInitiatorId(updateEventRequest.getEventId(), userId)
             .orElseThrow(() -> new EntityNotFoundException("Event", updateEventRequest.getEventId()));
-        if (!Objects.equals(user.getId(), event.getInitiator().getId())) {
-            throw new ForbiddenException(user.getId(), event.getId(), "event", "edit");
-        }
         if (event.getState().equals(PUBLISHED)) {
             throw new EventStateException(event.getId(), "edited", PUBLISHED.toString());
         }
@@ -148,10 +139,9 @@ public class EventServiceImpl implements EventService {
             updateEventRequest.getPaid(),
             updateEventRequest.getParticipantLimit()
         );
-        final Event savedEvent = eventRepository.save(updatedEvent);
-        log.info("Event " + savedEvent.getId() + " updated successfully.");
+        log.info("Event " + updatedEvent.getId() + " updated successfully.");
 
-        return getEventFullDto(savedEvent);
+        return getEventFullDto(updatedEvent);
     }
 
 
@@ -173,13 +163,8 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto getEvent(final long userId, final long eventId) {
-        final User user = userRepository.findById(userId)
-            .orElseThrow(() -> new EntityNotFoundException("User", userId));
-        final Event event = eventRepository.findById(eventId)
+        final Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
             .orElseThrow(() -> new EntityNotFoundException("Event", eventId));
-        if (userId != event.getInitiator().getId()) {
-            throw new ForbiddenException(userId, eventId, "event", "view");
-        }
 
         return getEventFullDto(event);
     }
@@ -192,7 +177,7 @@ public class EventServiceImpl implements EventService {
         final Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new EntityNotFoundException("Event", eventId));
         if (!Objects.equals(user.getId(), event.getInitiator().getId())) {
-            throw new ForbiddenException(userId, eventId, "event", "cancel");
+            throw new PermissionDeniedException(userId, eventId, "event", "cancel");
         }
         if (!event.getState().equals(PENDING)) {
             throw new EventStateException(eventId, "canceled", event.getState().toString());
@@ -247,10 +232,9 @@ public class EventServiceImpl implements EventService {
             adminUpdate.getPaid(),
             adminUpdate.getParticipantLimit()
         );
-        final Event savedEvent = eventRepository.save(updatedEvent);
-        log.info("Event " + savedEvent.getId() + " updated successfully.");
+        log.info("Event " + updatedEvent.getId() + " updated successfully.");
 
-        return getEventFullDto(savedEvent);
+        return getEventFullDto(updatedEvent);
     }
 
     @Override
@@ -290,15 +274,15 @@ public class EventServiceImpl implements EventService {
                                final String description,
                                final Boolean paid,
                                final Integer participantLimit) {
-        if (title != null) event.setTitle(title);
-        if (annotation != null) event.setAnnotation(annotation);
+        if (title != null && !title.isBlank()) event.setTitle(title);
+        if (annotation != null && !annotation.isBlank()) event.setAnnotation(annotation);
         if (categoryId != null) {
             Category category = categoryRepository
                 .findById(categoryId)
                 .orElseThrow(() -> new EntityNotFoundException("Category", categoryId));
             event.setCategory(category);
         }
-        if (description != null) event.setDescription(description);
+        if (description != null && !description.isBlank()) event.setDescription(description);
         if (paid != null) event.setPaid(paid);
         if (participantLimit != null) {
             event.setParticipantLimit(participantLimit);
@@ -319,20 +303,21 @@ public class EventServiceImpl implements EventService {
                                      final LocalDateTime rangeEnd,
                                      final List<Event> events,
                                      final TreeFunction<Event, Long, Long, R> mapper) {
-        if (events.isEmpty()) return new ArrayList<>();
+        if (events.isEmpty()) return Collections.emptyList();
 
         final LocalDateTime start = checkStart(events, rangeStart);
         final LocalDateTime end = checkEnd(rangeEnd);
 
         final Map<Event, String> eventUris = getEventUris(events);
         final Map<String, Long> uriStats = getUriStats(ewmClient, start, end, eventUris.values());
+        final Map<Long, Long> confirmedRequests = getConfirmedRequests(events, entityManager);
 
         return events
             .stream()
             .map(e ->
                 mapper.apply(
                     e,
-                    requestRepository.findByEventIdAndStatus(e.getId(), CONFIRMED).count(),
+                    confirmedRequests.getOrDefault(e.getId(), 0L),
                     uriStats.getOrDefault(eventUris.get(e), 0L)
                 )
             )
