@@ -2,7 +2,6 @@ package ru.practicum.explorewithme.ewmservice.service.category;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.dto.category.CategoryDto;
@@ -14,6 +13,7 @@ import ru.practicum.explorewithme.ewmservice.repository.CategoryRepository;
 import java.util.List;
 
 import static ru.practicum.explorewithme.ewmservice.service.category.CategoryMapper.*;
+import static ru.practicum.explorewithme.ewmservice.util.PageRequestUtil.getPageRequest;
 
 @Service
 @Slf4j
@@ -24,7 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryDto> getCategories(final int from, final int size) {
-        final List<Category> categories = categoryRepository.findAll(PageRequest.of(from / size, size)).toList();
+        final List<Category> categories = categoryRepository.findAll(getPageRequest(from, size)).toList();
 
         return toCategoryDtoList(categories);
     }
@@ -42,9 +42,8 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDto updateCategory(final CategoryDto categoryDto) {
         final Category category = categoryRepository.findById(categoryDto.getId())
             .orElseThrow(IllegalArgumentException::new);
-        if (categoryDto.getName() != null) {
-            category.setName(categoryDto.getName());
-        }
+        category.setName(categoryDto.getName());
+
         log.info("Category " + category.getId() + " updated successfully.");
 
         return toCategoryDto(category);

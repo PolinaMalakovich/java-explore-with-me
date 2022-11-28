@@ -43,7 +43,7 @@ public class HitServiceImpl implements HitService {
                                 final List<String> uris,
                                 final boolean unique) {
         if (end.isBefore(start)) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("End date cannot be earlier than start date.");
         }
         List<Stats> statsList;
         if (unique) {

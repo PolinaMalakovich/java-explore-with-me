@@ -1,4 +1,4 @@
-package ru.practicum.explorewithme.ewmservice.controller;
+package ru.practicum.explorewithme.ewmservice.controller.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -8,6 +8,7 @@ import ru.practicum.explorewithme.dto.user.UserDto;
 import ru.practicum.explorewithme.ewmservice.service.user.UserService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class UserController {
     @GetMapping
     public List<UserDto> getUsers(@RequestParam final List<Long> ids,
                                   @RequestParam(defaultValue = "0") @PositiveOrZero final int from,
-                                  @RequestParam(defaultValue = "10") @PositiveOrZero final int size) {
+                                  @RequestParam(defaultValue = "10") @Positive final int size) {
         return userService.getUsers(ids, from, size);
     }
 

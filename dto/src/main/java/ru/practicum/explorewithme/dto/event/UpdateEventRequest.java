@@ -21,5 +21,5 @@ public class UpdateEventRequest {
     LocalDateTime eventDate;
     Boolean paid;
     @PositiveOrZero
-    int participantLimit;
+    Integer participantLimit;
 }

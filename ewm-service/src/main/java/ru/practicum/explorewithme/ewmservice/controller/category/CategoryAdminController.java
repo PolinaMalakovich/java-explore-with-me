@@ -1,4 +1,4 @@
-package ru.practicum.explorewithme.ewmservice.controller;
+package ru.practicum.explorewithme.ewmservice.controller.category;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -9,36 +9,25 @@ import ru.practicum.explorewithme.ewmservice.service.category.CategoryService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.PositiveOrZero;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping(path = "/admin/categories")
 @Validated
-public class CategoryController {
+public class CategoryAdminController {
     private final CategoryService categoryService;
 
-    @GetMapping("/categories")
-    public List<CategoryDto> getCategories(@RequestParam(defaultValue = "0") @PositiveOrZero final int from,
-                                           @RequestParam(defaultValue = "10") @PositiveOrZero final int size) {
-        return categoryService.getCategories(from, size);
-    }
-
-    @GetMapping("/categories/{categoryId}")
-    public CategoryDto getCategory(@PathVariable @PositiveOrZero final long categoryId) {
-        return categoryService.getCategory(categoryId);
-    }
-
-    @PatchMapping("/admin/categories")
+    @PatchMapping
     public CategoryDto updateCategory(@Valid @RequestBody final CategoryDto categoryDto) {
         return categoryService.updateCategory(categoryDto);
     }
 
-    @PostMapping("/admin/categories")
+    @PostMapping
     public CategoryDto addCategory(@Valid @RequestBody final NewCategoryDto newCategoryDto) {
         return categoryService.addCategory(newCategoryDto);
     }
 
-    @DeleteMapping("/admin/categories/{categoryId}")
+    @DeleteMapping("/{categoryId}")
     public void deleteCategory(@PathVariable @PositiveOrZero final long categoryId) {
         categoryService.deleteCategory(categoryId);
     }

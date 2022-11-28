@@ -1,4 +1,4 @@
-package ru.practicum.explorewithme.ewmservice.controller;
+package ru.practicum.explorewithme.ewmservice.controller.participationrequest;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;

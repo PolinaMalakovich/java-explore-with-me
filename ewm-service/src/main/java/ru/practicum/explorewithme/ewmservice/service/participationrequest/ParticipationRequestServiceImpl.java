@@ -9,12 +9,15 @@ import ru.practicum.explorewithme.dto.participationrequest.ParticipationRequestD
 import ru.practicum.explorewithme.dto.participationrequest.ParticipationRequestStatus;
 import ru.practicum.explorewithme.ewmservice.exception.EntityNotFoundException;
 import ru.practicum.explorewithme.ewmservice.exception.ForbiddenException;
+import ru.practicum.explorewithme.ewmservice.exception.PermissionDeniedException;
+import ru.practicum.explorewithme.ewmservice.exception.event.EventException;
+import ru.practicum.explorewithme.ewmservice.exception.event.EventModerationException;
 import ru.practicum.explorewithme.ewmservice.model.Event;
 import ru.practicum.explorewithme.ewmservice.model.ParticipationRequest;
 import ru.practicum.explorewithme.ewmservice.model.User;
 import ru.practicum.explorewithme.ewmservice.repository.EventRepository;
-import ru.practicum.explorewithme.ewmservice.repository.ParticipationRequestRepository;
 import ru.practicum.explorewithme.ewmservice.repository.UserRepository;
+import ru.practicum.explorewithme.ewmservice.repository.participationrequest.ParticipationRequestRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,15 +47,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Override
     @Transactional
     public ParticipationRequestDto addParticipationRequest(final long userId, final long eventId) {
-        final User user = userRepository.findById(userId)
-            .orElseThrow(() -> new EntityNotFoundException("User", userId));
-        final Event event = eventRepository.findById(eventId)
-            .orElseThrow(() -> new EntityNotFoundException("Event", eventId));
-        if (participationRequestRepository.findByEventIdAndRequesterId(event.getId(), user.getId()).isPresent()) {
+        if (participationRequestRepository.findByEventIdAndRequesterId(eventId, userId).isPresent()) {
             throw new ForbiddenException(userId, eventId, "event", "add a participation request to",
                 "This request already exists.");
         }
-        if (Objects.equals(user.getId(), event.getInitiator().getId())) {
+        final Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new EntityNotFoundException("Event", eventId));
+        if (Objects.equals(userId, event.getInitiator().getId())) {
             throw new ForbiddenException(userId, eventId, "event", "add a participation request to",
                 "Event initiator cannot add a participation request to their own event.");
         }
@@ -68,6 +69,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         if (event.getParticipantLimit() == 0 || !event.isRequestModeration()) {
             status = CONFIRMED;
         }
+        final User user = userRepository.findById(userId)
+            .orElseThrow(() -> new EntityNotFoundException("User", userId));
         final ParticipationRequest participationRequest = new ParticipationRequest(
             null,
             LocalDateTime.now(),
@@ -95,10 +98,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     @Override
     public List<ParticipationRequestDto> getParticipationRequestsForEvent(final long userId, final long eventId) {
-        final Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
-            .orElseThrow(() -> new EntityNotFoundException("Event", eventId));
         return participationRequestRepository
-            .findByEventId(eventId)
+            .findParticipationRequestsByInitiatorIdAndEventId(userId, eventId)
             .map(ParticipationRequestMapper::toParticipationRequestDto)
             .collect(Collectors.toList());
     }
@@ -108,16 +109,19 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public ParticipationRequestDto approveParticipationRequest(final long userId,
                                                                final long eventId,
                                                                final long requestId) {
-        final Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
-            .orElseThrow(() -> new EntityNotFoundException("Event", eventId));
         final ParticipationRequest participationRequest = participationRequestRepository.findById(requestId)
             .orElseThrow(() -> new EntityNotFoundException("Participation request", requestId));
-        if (participationRequestRepository.findByEventIdAndStatus(event.getId(), CONFIRMED).count()
-            < event.getParticipantLimit()) {
-            participationRequest.setStatus(CONFIRMED);
+        final Event event = participationRequest.getEvent();
+        if (event.getParticipantLimit() == 0 || !event.isRequestModeration()) {
+            throw new EventModerationException(requestId, event.getId());
         }
-        if (participationRequestRepository.findByEventIdAndStatus(event.getId(), CONFIRMED).count()
-            == event.getParticipantLimit()) {
+        checkInitiatorAndEvent(event, userId, eventId, requestId, "approve");
+        long count = participationRequestRepository.findByEventIdAndStatus(event.getId(), CONFIRMED).count();
+        if (count < event.getParticipantLimit()) {
+            participationRequest.setStatus(CONFIRMED);
+            count += 1;
+        }
+        if (count == event.getParticipantLimit()) {
             participationRequestRepository
                 .findByEventIdAndStatus(event.getId(), PENDING)
                 .forEach(pr -> pr.setStatus(REJECTED));
@@ -132,13 +136,30 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public ParticipationRequestDto declineParticipationRequest(final long userId,
                                                                final long eventId,
                                                                final long requestId) {
-        final Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
-            .orElseThrow(() -> new EntityNotFoundException("Event", eventId));
         final ParticipationRequest participationRequest = participationRequestRepository.findById(requestId)
             .orElseThrow(() -> new EntityNotFoundException("Participation request", requestId));
+        final Event event = participationRequest.getEvent();
+        checkInitiatorAndEvent(event, userId, eventId, requestId, "reject");
         participationRequest.setStatus(REJECTED);
         log.info("Participation request " + participationRequest.getId() + " rejected successfully.");
 
         return toParticipationRequestDto(participationRequest);
+    }
+
+    private void checkInitiatorAndEvent(final Event event,
+                                        final long userId,
+                                        final long eventId,
+                                        final long requestId,
+                                        final String action) {
+        if (event.getInitiator().getId() != userId) {
+            throw new PermissionDeniedException(userId, eventId, "event", action + " participation requests for",
+                "Only event initiator can " + action + " requests.");
+        }
+        if (event.getId() != eventId) {
+            throw new EventException(
+                "Participation request " + requestId + " contains event " + event.getId() +
+                    ". It does not match the event sent: " + eventId + "."
+            );
+        }
     }
 }

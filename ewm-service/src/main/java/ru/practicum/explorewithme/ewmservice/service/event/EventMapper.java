@@ -118,7 +118,7 @@ public class EventMapper {
             newEventDto.isPaid(),
             user,
             newEventDto.getParticipantLimit(),
-            newEventDto.getRequestModeration(),
+            newEventDto.isRequestModeration(),
             PENDING
         );
     }

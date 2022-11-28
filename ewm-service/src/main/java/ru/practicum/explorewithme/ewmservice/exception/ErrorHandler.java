@@ -8,6 +8,10 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.practicum.explorewithme.ewmservice.exception.event.EventDateException;
+import ru.practicum.explorewithme.ewmservice.exception.event.EventException;
+import ru.practicum.explorewithme.ewmservice.exception.event.EventModerationException;
+import ru.practicum.explorewithme.ewmservice.exception.event.EventStateException;
 
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
@@ -194,6 +198,34 @@ public class ErrorHandler {
 
         return new ApiError(
             List.of("PermissionDeniedException"),
+            e.getMessage(),
+            "Incorrect request.",
+            BAD_REQUEST,
+            LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(BAD_REQUEST)
+    public ApiError handleEventModerationException(final EventModerationException e) {
+        log.error(e.getMessage());
+
+        return new ApiError(
+            List.of("EventModerationException"),
+            e.getMessage(),
+            "Incorrect request.",
+            BAD_REQUEST,
+            LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(BAD_REQUEST)
+    public ApiError handleEventException(final EventException e) {
+        log.error(e.getMessage());
+
+        return new ApiError(
+            List.of("EventException"),
             e.getMessage(),
             "Incorrect request.",
             BAD_REQUEST,

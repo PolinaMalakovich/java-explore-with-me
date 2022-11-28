@@ -2,7 +2,6 @@ package ru.practicum.explorewithme.ewmservice.service.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.dto.user.NewUserRequest;
@@ -13,6 +12,7 @@ import ru.practicum.explorewithme.ewmservice.repository.UserRepository;
 import java.util.List;
 
 import static ru.practicum.explorewithme.ewmservice.service.user.UserMapper.*;
+import static ru.practicum.explorewithme.ewmservice.util.PageRequestUtil.getPageRequest;
 
 @Service
 @Slf4j
@@ -24,7 +24,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> getUsers(final List<Long> userIds, final int from, final int size) {
         if (userIds.isEmpty()) {
-            List<User> users = userRepository.findAll(PageRequest.of(from / size, size)).toList();
+            List<User> users = userRepository.findAll(getPageRequest(from, size)).toList();
             return toUserDtoList(users);
         } else {
             return toUserDtoList(userRepository.findAllById(userIds));

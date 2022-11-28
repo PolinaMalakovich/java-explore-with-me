@@ -1,4 +1,4 @@
-package ru.practicum.explorewithme.ewmservice.exception;
+package ru.practicum.explorewithme.ewmservice.exception.event;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;

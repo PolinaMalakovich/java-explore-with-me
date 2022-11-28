@@ -15,10 +15,9 @@ import ru.practicum.explorewithme.ewmservice.model.Compilation;
 import ru.practicum.explorewithme.ewmservice.model.Event;
 import ru.practicum.explorewithme.ewmservice.repository.CompilationRepository;
 import ru.practicum.explorewithme.ewmservice.repository.EventRepository;
-import ru.practicum.explorewithme.ewmservice.repository.ParticipationRequestRepository;
+import ru.practicum.explorewithme.ewmservice.repository.participationrequest.ParticipationRequestRepository;
 import ru.practicum.explorewithme.ewmservice.spesification.CompilationSpecifications;
 
-import javax.persistence.EntityManager;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,9 @@ import static java.util.stream.Collectors.toList;
 import static ru.practicum.explorewithme.ewmservice.service.compilation.CompilationMapper.toCompilation;
 import static ru.practicum.explorewithme.ewmservice.service.compilation.CompilationMapper.toCompilationDto;
 import static ru.practicum.explorewithme.ewmservice.service.event.EventMapper.toEventShortDto;
-import static ru.practicum.explorewithme.ewmservice.util.StatsUtils.*;
+import static ru.practicum.explorewithme.ewmservice.util.PageRequestUtil.getPageRequest;
+import static ru.practicum.explorewithme.ewmservice.util.StatsUtils.getEventUris;
+import static ru.practicum.explorewithme.ewmservice.util.StatsUtils.getUriStats;
 
 @Service
 @Slf4j
@@ -41,7 +42,6 @@ public class CompilationServiceImpl implements CompilationService {
     private final EventRepository eventRepository;
     private final ParticipationRequestRepository prRepository;
     private final EwmClient ewmClient;
-    private final EntityManager entityManager;
 
     @Override
     public List<CompilationDto> getCompilations(final Boolean pinned, final int from, final int size) {
@@ -50,7 +50,7 @@ public class CompilationServiceImpl implements CompilationService {
             .flatMap(Optional::stream)
             .reduce(Specification::and);
 
-        final PageRequest pageable = PageRequest.of(from / size, size);
+        final PageRequest pageable = getPageRequest(from, size);
 
         final List<Compilation> compilations = specifications
             .map(s -> compilationRepository.findAll(s, pageable))
@@ -65,7 +65,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         final Map<Event, String> eventUris = getEventUris(eventList);
         final Map<String, Long> uriStats = getUriStats(ewmClient, eventList, eventUris.values());
-        final Map<Long, Long> confirmedRequests = getConfirmedRequests(eventList, entityManager);
+        final Map<Long, Long> confirmedRequests = prRepository.getConfirmedRequests(eventList);
 
         return compilations
             .stream()
@@ -92,7 +92,7 @@ public class CompilationServiceImpl implements CompilationService {
             .collect(toList());
         final Map<Event, String> eventUris = getEventUris(eventList);
         final Map<String, Long> uriStats = getUriStats(ewmClient, eventList, eventUris.values());
-        final Map<Long, Long> confirmedRequests = getConfirmedRequests(eventList, entityManager);
+        final Map<Long, Long> confirmedRequests = prRepository.getConfirmedRequests(eventList);
         final List<EventShortDto> dtoList = eventList
             .stream()
             .map(e ->
@@ -115,7 +115,7 @@ public class CompilationServiceImpl implements CompilationService {
         final Compilation newCompilation = compilationRepository.save(compilation);
         final Map<Event, String> eventUris = getEventUris(events);
         final Map<String, Long> uriStats = getUriStats(ewmClient, events, eventUris.values());
-        final Map<Long, Long> confirmedRequests = getConfirmedRequests(events, entityManager);
+        final Map<Long, Long> confirmedRequests = prRepository.getConfirmedRequests(events);
         final List<EventShortDto> shorts = events
             .stream()
             .map(event -> toEventShortDto(
@@ -163,7 +163,7 @@ public class CompilationServiceImpl implements CompilationService {
         final List<Event> eventList = compilation.getEvents();
         final Map<Event, String> eventUris = getEventUris(eventList);
         final Map<String, Long> uriStats = getUriStats(ewmClient, eventList, eventUris.values());
-        final Map<Long, Long> confirmedRequests = getConfirmedRequests(eventList, entityManager);
+        final Map<Long, Long> confirmedRequests = prRepository.getConfirmedRequests(eventList);
         final List<EventShortDto> events = eventRepository
             .findEventsByCompilationIdOrderById(compilationId)
             .map(e -> toEventShortDto(
