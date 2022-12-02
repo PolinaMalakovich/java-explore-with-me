@@ -32,8 +32,10 @@ public class CommentController {
     }
 
     @GetMapping("/comments")
-    public List<CommentDto> getComments(@PathVariable @PositiveOrZero long eventId) {
-        return commentService.getComments(eventId);
+    public List<CommentDto> getComments(@PathVariable @PositiveOrZero long eventId,
+                                        @RequestParam(defaultValue = "0") @PositiveOrZero final int from,
+                                        @RequestParam(defaultValue = "10") @PositiveOrZero final int size) {
+        return commentService.getComments(eventId, from, size);
     }
 
     @PatchMapping("/comments")

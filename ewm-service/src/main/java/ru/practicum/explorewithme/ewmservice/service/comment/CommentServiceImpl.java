@@ -2,6 +2,7 @@ package ru.practicum.explorewithme.ewmservice.service.comment;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.dto.comment.CommentDto;
@@ -21,6 +22,7 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 import static ru.practicum.explorewithme.ewmservice.service.comment.CommentMapper.toComment;
 import static ru.practicum.explorewithme.ewmservice.service.comment.CommentMapper.toCommentDto;
+import static ru.practicum.explorewithme.ewmservice.util.PageRequestUtil.getPageRequest;
 
 @Service
 @Slf4j
@@ -53,8 +55,13 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentDto> getComments(final long eventId) {
-        return commentRepository.findCommentsByEventId(eventId).map(CommentMapper::toCommentDto).collect(toList());
+    public List<CommentDto> getComments(final long eventId, final int from, final int size) {
+        final PageRequest pageable = getPageRequest(from, size);
+
+        return commentRepository
+            .findCommentsByEventId(eventId, pageable)
+            .map(CommentMapper::toCommentDto)
+            .collect(toList());
     }
 
     @Override
