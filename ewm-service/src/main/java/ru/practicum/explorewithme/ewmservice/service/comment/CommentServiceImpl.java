@@ -88,18 +88,18 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void deleteComment(final long eventId, final long commentId, final long userId) {
-        commentRepository.findCommentByIdAndEventIdAndAuthorId(commentId, eventId, userId)
+        final Comment comment = commentRepository.findCommentByIdAndEventIdAndAuthorId(commentId, eventId, userId)
             .orElseThrow(() -> new EntityNotFoundException("Comment", commentId));
-        commentRepository.deleteById(commentId);
-        log.info("Comment " + commentId + " deleted successfully.");
+        commentRepository.deleteById(comment.getId());
+        log.info("Comment " + comment.getId() + " deleted successfully.");
     }
 
     @Override
     @Transactional
     public void deleteCommentForAdmin(final long eventId, final long commentId) {
-        commentRepository.findCommentByIdAndEventId(commentId, eventId)
+        final Comment comment = commentRepository.findCommentByIdAndEventId(commentId, eventId)
             .orElseThrow(() -> new EntityNotFoundException("Comment", commentId));
-        commentRepository.deleteById(commentId);
-        log.info("Comment " + commentId + " deleted successfully.");
+        commentRepository.deleteById(comment.getId());
+        log.info("Comment " + comment.getId() + " deleted successfully.");
     }
 }
