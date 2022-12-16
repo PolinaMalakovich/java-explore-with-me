@@ -55,16 +55,6 @@ public class EventSpecifications {
         };
     }
 
-//    public static Specification<Event> onlyAvailable() {
-//        return (event, cq, cb) -> {
-//            Join<Event, ParticipationRequest> participationRequests = event.join("participationRequests");
-//            Path<Long> id = participationRequests
-//                .on(cb.equal(participationRequests.get("status"), APPROVED))
-//                .get("id");
-//            return cb.greaterThan(event.get("participantLimit"), cb.count(id));
-//        };
-//    }
-
     public static Specification<Event> betweenDates(final LocalDateTime rangeStart, final LocalDateTime rangeEnd) {
         if (nonNull(rangeStart) && nonNull(rangeEnd)) {
             return (event, cq, cb) -> cb.between(event.get("eventDate"), rangeStart, rangeEnd);
