@@ -1,6 +1,6 @@
 [English](README.md) | [Русский](README-ru.md)
 
-#ExploreWithMe
+# ExploreWithMe
 
 La aplicación te ayuda a encontrar compañía para ir al cine, a un concierto, una exposición u otro evento.
 
