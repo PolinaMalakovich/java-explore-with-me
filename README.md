@@ -1,3 +1,5 @@
+[Español](README-es.md) | [Русский](README-ru.md)
+
 # ExploreWithMe
 
 ExploreWithMe helps you find events to go to and people to go with.
@@ -22,7 +24,7 @@ ExploreWithMe helps you find events to go to and people to go with.
 - Add, view and delete users
 - Delete comments from other users
 
-## Instalation
+## Installation
 
 ### Requirements
 - Docker Compose
@@ -30,6 +32,6 @@ ExploreWithMe helps you find events to go to and people to go with.
 - JDK 11
 
 ### Instruction
-To instal the app run the following commands from the root of this repository:
+To install the app run the following commands from the root of this repository:
 - `mvn instal`
 - `docker compose up`
